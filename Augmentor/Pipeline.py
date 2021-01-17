@@ -919,7 +919,7 @@ class Pipeline(object):
         else:
             self.add_operation(Rotate(probability=probability, rotation=-1))
 
-    def rotate(self, probability, max_left_rotation, max_right_rotation):
+    def rotate(self, probability, max_left_rotation, max_right_rotation, resample_filter="BICUBIC"):
         """
         Rotate an image by an arbitrary amount.
 
@@ -960,9 +960,9 @@ class Pipeline(object):
             raise ValueError("The max_right_rotation argument must be between 0 and 25.")
         else:
             self.add_operation(RotateRange(probability=probability, max_left_rotation=ceil(max_left_rotation),
-                                           max_right_rotation=ceil(max_right_rotation)))
+                                           max_right_rotation=ceil(max_right_rotation), resample_filter=resample_filter))
 
-    def rotate_without_crop(self, probability, max_left_rotation, max_right_rotation, expand=False, fillcolor=None):
+    def rotate_without_crop(self, probability, max_left_rotation, max_right_rotation, expand=False, fillcolor=None, resample_filter="BICUBIC"):
         """
         Rotate an image without automatically cropping.
 
@@ -991,7 +991,7 @@ class Pipeline(object):
         """
         self.add_operation(RotateStandard(probability=probability, max_left_rotation=ceil(max_left_rotation),
                                           max_right_rotation=ceil(max_right_rotation), expand=expand,
-                                          fillcolor=fillcolor))
+                                          fillcolor=fillcolor, resample_filter=resample_filter))
 
     def flip_top_bottom(self, probability):
         """
@@ -1045,7 +1045,7 @@ class Pipeline(object):
         else:
             self.add_operation(Flip(probability=probability, top_bottom_left_right="RANDOM"))
 
-    def random_distortion(self, probability, grid_width, grid_height, magnitude):
+    def random_distortion(self, probability, grid_width, grid_height, magnitude, resample_filter="BICUBIC"):
         """
         Performs a random, elastic distortion on an image.
 
@@ -1078,10 +1078,10 @@ class Pipeline(object):
             raise ValueError(Pipeline._probability_error_text)
         else:
             self.add_operation(Distort(probability=probability, grid_width=grid_width,
-                                       grid_height=grid_height, magnitude=magnitude))
+                                       grid_height=grid_height, magnitude=magnitude, resample_filter=resample_filter))
 
     def gaussian_distortion(self, probability, grid_width, grid_height, magnitude, corner, method, mex=0.5, mey=0.5,
-                            sdx=0.05, sdy=0.05):
+                            sdx=0.05, sdy=0.05, resample_filter="BICUBIC"):
         """
         Performs a random, elastic gaussian distortion on an image.
 
@@ -1143,9 +1143,9 @@ class Pipeline(object):
                                                   grid_height=grid_height,
                                                   magnitude=magnitude, corner=corner,
                                                   method=method,  mex=mex,
-                                                  mey=mey, sdx=sdx, sdy=sdy))
+                                                  mey=mey, sdx=sdx, sdy=sdy, resample_filter=resample_filter))
 
-    def zoom(self, probability, min_factor, max_factor):
+    def zoom(self, probability, min_factor, max_factor, resample_filter="BICUBIC"):
         """
         Zoom in to an image, while **maintaining its size**. The amount by
         which the image is zoomed is a randomly chosen value between
@@ -1173,9 +1173,9 @@ class Pipeline(object):
         elif min_factor <= 0:
             raise ValueError("The min_factor argument must be greater than 0.")
         else:
-            self.add_operation(Zoom(probability=probability, min_factor=min_factor, max_factor=max_factor))
+            self.add_operation(Zoom(probability=probability, min_factor=min_factor, max_factor=max_factor, resample_filter=resample_filter))
 
-    def zoom_random(self, probability, percentage_area, randomise_percentage_area=False):
+    def zoom_random(self, probability, percentage_area, randomise_percentage_area=False, resample_filter="BICUBIC"):
         """
         Zooms into an image at a random location within the image.
 
@@ -1200,7 +1200,7 @@ class Pipeline(object):
         elif not isinstance(randomise_percentage_area, bool):
             raise ValueError("The randomise_percentage_area argument must be True or False.")
         else:
-            self.add_operation(ZoomRandom(probability=probability, percentage_area=percentage_area, randomise=randomise_percentage_area))
+            self.add_operation(ZoomRandom(probability=probability, percentage_area=percentage_area, randomise=randomise_percentage_area, resample_filter=resample_filter))
 
     def crop_by_size(self, probability, width, height, centre=True):
         """
@@ -1311,7 +1311,7 @@ class Pipeline(object):
         else:
             self.add_operation(HistogramEqualisation(probability=probability))
 
-    def scale(self, probability, scale_factor):
+    def scale(self, probability, scale_factor, resample_filter="BICUBIC"):
         """
         Scale (enlarge) an image, while maintaining its aspect ratio. This
         returns an image with larger dimensions than the original image.
@@ -1331,7 +1331,7 @@ class Pipeline(object):
         elif scale_factor <= 1.0:
             raise ValueError("The scale_factor argument must be greater than 1.")
         else:
-            self.add_operation(Scale(probability=probability, scale_factor=scale_factor))
+            self.add_operation(Scale(probability=probability, scale_factor=scale_factor, resample_filter=resample_filter))
 
     def resize(self, probability, width, height, resample_filter="BICUBIC"):
         """
@@ -1362,7 +1362,7 @@ class Pipeline(object):
         else:
             self.add_operation(Resize(probability=probability, width=width, height=height, resample_filter=resample_filter))
 
-    def skew_left_right(self, probability, magnitude=1):
+    def skew_left_right(self, probability, magnitude=1, resample_filter="BICUBIC"):
         """
         Skew an image by tilting it left or right by a random amount. The
         magnitude of this skew can be set to a maximum using the
@@ -1384,9 +1384,9 @@ class Pipeline(object):
         elif not 0 < magnitude <= 1:
             raise ValueError("The magnitude argument must be greater than 0 and less than or equal to 1.")
         else:
-            self.add_operation(Skew(probability=probability, skew_type="TILT_LEFT_RIGHT", magnitude=magnitude))
+            self.add_operation(Skew(probability=probability, skew_type="TILT_LEFT_RIGHT", magnitude=magnitude, resample_filter=resample_filter))
 
-    def skew_top_bottom(self, probability, magnitude=1):
+    def skew_top_bottom(self, probability, magnitude=1, resample_filter="BICUBIC"):
         """
         Skew an image by tilting it forwards or backwards by a random amount.
         The magnitude of this skew can be set to a maximum using the
@@ -1410,9 +1410,10 @@ class Pipeline(object):
         else:
             self.add_operation(Skew(probability=probability,
                                     skew_type="TILT_TOP_BOTTOM",
-                                    magnitude=magnitude))
+                                    magnitude=magnitude,
+                                    resample_filter=resample_filter))
 
-    def skew_tilt(self, probability, magnitude=1):
+    def skew_tilt(self, probability, magnitude=1, resample_filter="BICUBIC"):
         """
         Skew an image by tilting in a random direction, either forwards,
         backwards, left, or right, by a random amount. The magnitude of
@@ -1437,9 +1438,10 @@ class Pipeline(object):
         else:
             self.add_operation(Skew(probability=probability,
                                     skew_type="TILT",
-                                    magnitude=magnitude))
+                                    magnitude=magnitude,
+                                    resample_filter=resample_filter))
 
-    def skew_corner(self, probability, magnitude=1):
+    def skew_corner(self, probability, magnitude=1, resample_filter="BICUBIC"):
         """
         Skew an image towards one corner, randomly by a random magnitude.
 
@@ -1458,9 +1460,10 @@ class Pipeline(object):
         else:
             self.add_operation(Skew(probability=probability,
                                     skew_type="CORNER",
-                                    magnitude=magnitude))
+                                    magnitude=magnitude,
+                                    resample_filter=resample_filter))
 
-    def skew(self, probability, magnitude=1):
+    def skew(self, probability, magnitude=1, resample_filter="BICUBIC"):
         """
         Skew an image in a random direction, either left to right,
         top to bottom, or one of 8 corner directions.
@@ -1482,9 +1485,9 @@ class Pipeline(object):
         else:
             self.add_operation(Skew(probability=probability,
                                     skew_type="RANDOM",
-                                    magnitude=magnitude))
+                                    magnitude=magnitude,resample_filter=resample_filter))
 
-    def shear(self, probability, max_shear_left, max_shear_right):
+    def shear(self, probability, max_shear_left, max_shear_right, resample_filter="BICUBIC"):
         """
         Shear the image by a specified number of degrees.
 
@@ -1509,7 +1512,7 @@ class Pipeline(object):
         else:
             self.add_operation(Shear(probability=probability,
                                      max_shear_left=max_shear_left,
-                                     max_shear_right=max_shear_right))
+                                     max_shear_right=max_shear_right,resample_filter=resample_filter))
 
     def greyscale(self, probability):
         """

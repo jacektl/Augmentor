@@ -424,7 +424,7 @@ class Skew(Operation):
     This class is used to perform perspective skewing on images. It allows
     for skewing from a total of 12 different perspectives.
     """
-    def __init__(self, probability, skew_type, magnitude):
+    def __init__(self, probability, skew_type, magnitude, resample_filter="BICUBIC"):
         """
         As well as the required :attr:`probability` parameter, the type of
         skew that is performed is controlled using a :attr:`skew_type` and a
@@ -460,13 +460,18 @@ class Skew(Operation):
          To see examples of the various skews, see :ref:`perspectiveskewing`.
 
         :param magnitude: The degree to which the image is skewed.
+        :param resample_filter: The resample filter to use. Must be one of
+         the standard PIL types, i.e. ``NEAREST``, ``BICUBIC``, ``ANTIALIAS``,
+         or ``BILINEAR``.
         :type probability: Float
         :type skew_type: String
         :type magnitude: Integer
+        :type resample_filter: String
         """
         Operation.__init__(self, probability)
         self.skew_type = skew_type
         self.magnitude = magnitude
+        self.resample_filter = resample_filter
 
     def perform_operation(self, images):
         """
@@ -614,7 +619,7 @@ class Skew(Operation):
             return image.transform(image.size,
                                    Image.PERSPECTIVE,
                                    perspective_skew_coefficients_matrix,
-                                   resample=Image.BICUBIC)
+                                   resample=eval("Image.%s" % self.resample_filter))
 
         augmented_images = []
 
@@ -634,7 +639,7 @@ class RotateStandard(Operation):
     .. seealso:: For 90 degree rotations, see the :class:`Rotate` class.
     """
 
-    def __init__(self, probability, max_left_rotation, max_right_rotation, expand=False, fillcolor=None):
+    def __init__(self, probability, max_left_rotation, max_right_rotation, expand=False, fillcolor=None, resample_filter="BICUBIC"):
         """
         Documentation to appear.
         """
@@ -643,6 +648,7 @@ class RotateStandard(Operation):
         self.max_right_rotation = abs(max_right_rotation)  # Ensure always positive
         self.expand = expand
         self.fillcolor = fillcolor
+        self.resample_filter = resample_filter
 
     def perform_operation(self, images):
         """
@@ -758,7 +764,7 @@ class RotateRange(Operation):
     The :ref:`rotating` section describes this in detail and has example
     images to demonstrate this.
     """
-    def __init__(self, probability, max_left_rotation, max_right_rotation):
+    def __init__(self, probability, max_left_rotation, max_right_rotation, resample_filter="BICUBIC"):
         """
         As well as the required :attr:`probability` parameter, the
         :attr:`max_left_rotation` parameter controls the maximum number of
@@ -775,10 +781,12 @@ class RotateRange(Operation):
         :type probability: Float
         :type max_left_rotation: Integer
         :type max_right_rotation: Integer
+        :type resample_filter: String
         """
         Operation.__init__(self, probability)
         self.max_left_rotation = -abs(max_left_rotation)   # Ensure always negative
         self.max_right_rotation = abs(max_right_rotation)  # Ensure always positive
+        self.resample_filter = resample_filter
 
     def perform_operation(self, images):
         """
@@ -813,7 +821,7 @@ class RotateRange(Operation):
             y = image.size[1]
 
             # Rotate, while expanding the canvas size
-            image = image.rotate(rotation, expand=True, resample=Image.BICUBIC)
+            image = image.rotate(rotation, expand=True, resample=eval("Image.%s" % self.resample_filter))
 
             # Get size after rotation, which includes the empty space
             X = image.size[0]
@@ -843,7 +851,7 @@ class RotateRange(Operation):
             image = image.crop((int(round(E)), int(round(A)), int(round(X - E)), int(round(Y - A))))
 
             # Return the image, re-sized to the size of the image passed originally
-            return image.resize((x, y), resample=Image.BICUBIC)
+            return image.resize((x, y), resample=eval("Image.%s" % self.resample_filter))
 
         augmented_images = []
 
@@ -1154,7 +1162,7 @@ class Shear(Operation):
 
     For sample code with image examples see :ref:`shearing`.
     """
-    def __init__(self, probability, max_shear_left, max_shear_right):
+    def __init__(self, probability, max_shear_left, max_shear_right, resample_filter="BICUBIC"):
         """
         The shearing is randomised in magnitude, from 0 to the
         :attr:`max_shear_left` or 0 to :attr:`max_shear_right` where the
@@ -1166,13 +1174,18 @@ class Shear(Operation):
          performed when it is invoked in the pipeline.
         :param max_shear_left: The maximum shear to the left.
         :param max_shear_right: The maximum shear to the right.
+        :param resample_filter: The resample filter to use. Must be one of
+         the standard PIL types, i.e. ``NEAREST``, ``BICUBIC``, ``ANTIALIAS``,
+         or ``BILINEAR``.
         :type probability: Float
         :type max_shear_left: Integer
         :type max_shear_right: Integer
+        :type resample_filter: String
         """
         Operation.__init__(self, probability)
         self.max_shear_left = max_shear_left
         self.max_shear_right = max_shear_right
+        self.resample_filter = resample_filter
 
     def perform_operation(self, images):
         """
@@ -1264,11 +1277,11 @@ class Shear(Operation):
                 image = image.transform((int(round(width + shift_in_pixels)), height),
                                         Image.AFFINE,
                                         transform_matrix,
-                                        Image.BICUBIC)
+                                        eval("Image.%s" % self.resample_filter))
 
                 image = image.crop((abs(shift_in_pixels), 0, width, height))
 
-                return image.resize((width, height), resample=Image.BICUBIC)
+                return image.resize((width, height), resample=eval("Image.%s" % self.resample_filter))
 
             elif direction == "y":
                 shift_in_pixels = phi * width
@@ -1285,11 +1298,11 @@ class Shear(Operation):
                 image = image.transform((width, int(round(height + shift_in_pixels))),
                                         Image.AFFINE,
                                         transform_matrix,
-                                        Image.BICUBIC)
+                                        eval("Image.%s" % self.resample_filter))
 
                 image = image.crop((0, abs(shift_in_pixels), width, height))
 
-                return image.resize((width, height), resample=Image.BICUBIC)
+                return image.resize((width, height), resample=eval("Image.%s" % self.resample_filter))
 
         augmented_images = []
 
@@ -1310,7 +1323,7 @@ class Scale(Operation):
     This function will return images that are **larger** than the input
     images.
     """
-    def __init__(self, probability, scale_factor):
+    def __init__(self, probability, scale_factor, resample_filter="BICUBIC"):
         """
         As the aspect ratio is always kept constant, only a
         :attr:`scale_factor` is required for scaling the image.
@@ -1324,6 +1337,7 @@ class Scale(Operation):
         """
         Operation.__init__(self, probability)
         self.scale_factor = scale_factor
+        self.resample_filter = resample_filter
 
     def perform_operation(self, images):
         """
@@ -1342,7 +1356,7 @@ class Scale(Operation):
             new_h = int(h * self.scale_factor)
             new_w = int(w * self.scale_factor)
 
-            return image.resize((new_w, new_h), resample=Image.BICUBIC)
+            return image.resize((new_w, new_h), resample=eval("Image.%s" % self.resample_filter))
 
         augmented_images = []
 
@@ -1356,7 +1370,7 @@ class Distort(Operation):
     """
     This class performs randomised, elastic distortions on images.
     """
-    def __init__(self, probability, grid_width, grid_height, magnitude):
+    def __init__(self, probability, grid_width, grid_height, magnitude, resample_filter="BICUBIC"):
         """
         As well as the probability, the granularity of the distortions
         produced by this class can be controlled using the width and
@@ -1374,10 +1388,14 @@ class Distort(Operation):
          by the class to apply the transformations to the image.
         :param magnitude: Controls the degree to which each distortion is
          applied to the overlaying distortion grid.
+        :param resample_filter: The resample filter to use. Must be one of
+         the standard PIL types, i.e. ``NEAREST``, ``BICUBIC``, ``ANTIALIAS``,
+         or ``BILINEAR``.
         :type probability: Float
         :type grid_width: Integer
         :type grid_height: Integer
         :type magnitude: Integer
+        :type resample_filter: String
         """
         Operation.__init__(self, probability)
         self.grid_width = grid_width
@@ -1385,6 +1403,7 @@ class Distort(Operation):
         self.magnitude = abs(magnitude)
         # TODO: Implement non-random magnitude.
         self.randomise_magnitude = True
+        self.resample_filter = resample_filter
 
     def perform_operation(self, images):
         """
@@ -1486,7 +1505,7 @@ class Distort(Operation):
 
         def do(image):
 
-            return image.transform(image.size, Image.MESH, generated_mesh, resample=Image.BICUBIC)
+            return image.transform(image.size, Image.MESH, generated_mesh, resample=eval("Image.%s" % self.resample_filter))
 
         augmented_images = []
 
@@ -1500,7 +1519,7 @@ class GaussianDistortion(Operation):
     """
     This class performs randomised, elastic gaussian distortions on images.
     """
-    def __init__(self, probability, grid_width, grid_height, magnitude, corner, method, mex, mey, sdx, sdy):
+    def __init__(self, probability, grid_width, grid_height, magnitude, corner, method, mex, mey, sdx, sdy, resample_filter="BICUBIC"):
         """
         As well as the probability, the granularity of the distortions
         produced by this class can be controlled using the width and
@@ -1560,6 +1579,7 @@ class GaussianDistortion(Operation):
         self.mey = mey
         self.sdx = sdx
         self.sdy = sdy
+        self.resample_filter = resample_filter
 
     def perform_operation(self, images):
         """
@@ -1686,7 +1706,7 @@ class GaussianDistortion(Operation):
             for i in range(len(dimensions)):
                 generated_mesh.append([dimensions[i], polygons[i]])
 
-            return image.transform(image.size, Image.MESH, generated_mesh, resample=Image.BICUBIC)
+            return image.transform(image.size, Image.MESH, generated_mesh, resample=eval("Image.%s" % self.resample_filter))
 
         augmented_images = []
 
@@ -1701,7 +1721,7 @@ class Zoom(Operation):
     This class is used to enlarge images (to zoom) but to return a cropped
     region of the zoomed image of the same size as the original image.
     """
-    def __init__(self, probability, min_factor, max_factor):
+    def __init__(self, probability, min_factor, max_factor, resample_filter="BICUBIC"):
         """
         The amount of zoom applied is randomised, from between
         :attr:`min_factor` and :attr:`max_factor`. Set these both to the same
@@ -1715,13 +1735,18 @@ class Zoom(Operation):
         :param max_factor: The maximum amount of zoom to apply. Set both the
          :attr:`min_factor` and :attr:`min_factor` to the same values to zoom
          by a constant factor.
+        :param resample_filter: The resample filter to use. Must be one of
+         the standard PIL types, i.e. ``NEAREST``, ``BICUBIC``, ``ANTIALIAS``,
+         or ``BILINEAR``.
         :type probability: Float
         :type min_factor: Float
         :type max_factor: Float
+        :type resample_filter: String
         """
         Operation.__init__(self, probability)
         self.min_factor = min_factor
         self.max_factor = max_factor
+        self.resample_filter = resample_filter
 
     def perform_operation(self, images):
         """
@@ -1739,7 +1764,7 @@ class Zoom(Operation):
 
             image_zoomed = image.resize((int(round(image.size[0] * factor)),
                                          int(round(image.size[1] * factor))),
-                                         resample=Image.BICUBIC)
+                                         resample=eval("Image.%s" % self.resample_filter))
             w_zoomed, h_zoomed = image_zoomed.size
 
             return image_zoomed.crop((floor((float(w_zoomed) / 2) - (float(w) / 2)),
@@ -1760,7 +1785,7 @@ class ZoomRandom(Operation):
     This class is used to zoom into random areas of the image.
     """
 
-    def __init__(self, probability, percentage_area, randomise):
+    def __init__(self, probability, percentage_area, randomise, resample_filter="BICUBIC"):
         """
         Zooms into a random area of the image, rather than the centre of
         the image, as is done by :class:`Zoom`. The zoom factor is fixed
@@ -1779,6 +1804,7 @@ class ZoomRandom(Operation):
         Operation.__init__(self, probability)
         self.percentage_area = percentage_area
         self.randomise = randomise
+        self.resample_filter = resample_filter
 
     def perform_operation(self, images):
         """
@@ -1809,7 +1835,7 @@ class ZoomRandom(Operation):
         def do(image):
             image = image.crop((random_left_shift, random_down_shift, w_new + random_left_shift, h_new + random_down_shift))
 
-            return image.resize((w, h), resample=Image.BICUBIC)
+            return image.resize((w, h), resample=eval("Image.%s" % self.resample_filter))
 
         augmented_images = []
 
@@ -1977,7 +2003,7 @@ class ZoomGroundTruth(Operation):
     This class is used to enlarge images (to zoom) but to return a cropped
     region of the zoomed image of the same size as the original image.
     """
-    def __init__(self, probability, min_factor, max_factor):
+    def __init__(self, probability, min_factor, max_factor, resample_filter="BICUBIC"):
         """
         The amount of zoom applied is randomised, from between
         :attr:`min_factor` and :attr:`max_factor`. Set these both to the same
@@ -2014,7 +2040,7 @@ class ZoomGroundTruth(Operation):
             w, h = image.size
 
             # TODO: Join these two functions together so that we don't have this image_zoom variable lying around.
-            image_zoomed = image.resize((int(round(image.size[0] * factor)), int(round(image.size[1] * factor))), resample=Image.BICUBIC)
+            image_zoomed = image.resize((int(round(image.size[0] * factor)), int(round(image.size[1] * factor))), resample=eval("Image.%s" % self.resample_filter))
             w_zoomed, h_zoomed = image_zoomed.size
 
             return image_zoomed.crop((floor((float(w_zoomed) / 2) - (float(w) / 2)),
